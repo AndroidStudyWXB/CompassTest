@@ -7,17 +7,22 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.animation.Animation;
+import android.view.animation.RotateAnimation;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
 
     private SensorManager sensorManager;
+    private ImageView compassImg;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        compassImg = (ImageView) findViewById(R.id.compass_img);
         sensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
 
         Sensor magneticSensor = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
@@ -39,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
 
         float[] accerometerValues = new float[3];
         float[] magneticValues = new float[3];
+        private float lastRotateDegree;
 
         @Override
         public void onSensorChanged(SensorEvent event) {
@@ -59,8 +65,17 @@ public class MainActivity extends AppCompatActivity {
             SensorManager.getRotationMatrix(R, null, accerometerValues, magneticValues);
             SensorManager.getOrientation(R, values);
 
-            Float v = new Float(Math.toDegrees(values[0]));
-            Toast.makeText(MainActivity.this, v.toString(), Toast.LENGTH_LONG).show();
+            float rotateDegree = -(float) Math.toDegrees(values[0]);
+            if(Math.abs(rotateDegree - lastRotateDegree) > 15) {
+                RotateAnimation animation = new RotateAnimation(
+                        lastRotateDegree,
+                        rotateDegree,
+                        Animation.RELATIVE_TO_SELF, 0.5f,
+                        Animation.RELATIVE_TO_SELF, 0.5f);
+                animation.setFillAfter(true);
+                compassImg.startAnimation(animation);
+                lastRotateDegree = rotateDegree;
+            }
         }
 
         @Override
